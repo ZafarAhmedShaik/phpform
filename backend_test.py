@@ -194,6 +194,168 @@ class BackendTester:
         
         return all_passed
     
+    def test_enhanced_email_validation(self):
+        """Test enhanced email validation with various formats"""
+        valid_emails = [
+            "user@domain.com",
+            "test.email@example.org",
+            "user+tag@domain.co.uk",
+            "firstname.lastname@company.com",
+            "user123@test-domain.net"
+        ]
+        
+        invalid_emails = [
+            "plainaddress",
+            "@missingdomain.com",
+            "missing@.com",
+            "missing@domain",
+            "spaces @domain.com",
+            "user@",
+            "@domain.com",
+            "user..double.dot@domain.com",
+            "user@domain..com"
+        ]
+        
+        all_passed = True
+        
+        # Test valid emails
+        for email in valid_emails:
+            test_data = {
+                "full_name": "Test User",
+                "email": email,
+                "phone_number": "+1-555-123-4567"
+            }
+            
+            try:
+                response = self.session.post(
+                    f"{BACKEND_URL}/clients",
+                    json=test_data,
+                    headers={"Content-Type": "application/json"}
+                )
+                
+                if response.status_code in [200, 409]:  # 200 for new, 409 for duplicate
+                    self.log_test(f"Valid Email ({email})", True, "Accepted valid email format")
+                else:
+                    self.log_test(f"Valid Email ({email})", False, f"Rejected valid email: {response.status_code}", response.text)
+                    all_passed = False
+            except Exception as e:
+                self.log_test(f"Valid Email ({email})", False, f"Request error: {str(e)}")
+                all_passed = False
+        
+        # Test invalid emails
+        for email in invalid_emails:
+            test_data = {
+                "full_name": "Test User",
+                "email": email,
+                "phone_number": "+1-555-123-4567"
+            }
+            
+            try:
+                response = self.session.post(
+                    f"{BACKEND_URL}/clients",
+                    json=test_data,
+                    headers={"Content-Type": "application/json"}
+                )
+                
+                if response.status_code == 400:
+                    error_data = response.json()
+                    if "valid email" in error_data.get("detail", "").lower():
+                        self.log_test(f"Invalid Email ({email})", True, "Correctly rejected invalid email")
+                    else:
+                        self.log_test(f"Invalid Email ({email})", False, "Wrong error message", error_data)
+                        all_passed = False
+                elif response.status_code == 422:  # Pydantic validation
+                    self.log_test(f"Invalid Email ({email})", True, "Correctly rejected invalid email (422)")
+                else:
+                    self.log_test(f"Invalid Email ({email})", False, f"Expected 400/422, got {response.status_code}", response.text)
+                    all_passed = False
+            except Exception as e:
+                self.log_test(f"Invalid Email ({email})", False, f"Request error: {str(e)}")
+                all_passed = False
+        
+        return all_passed
+    
+    def test_enhanced_phone_validation(self):
+        """Test enhanced phone number validation for +1-XXX-XXX-XXXX format"""
+        valid_phones = [
+            "+1-555-123-4567",
+            "+1-800-555-1234",
+            "+1-212-987-6543",
+            "+1-415-123-9876"
+        ]
+        
+        invalid_phones = [
+            "+1234567890",  # No dashes
+            "1-555-123-4567",  # Missing +
+            "+15551234567",  # No dashes
+            "+1-555-1234",  # Too short
+            "+1-555-123-45678",  # Too long
+            "555-123-4567",  # Missing +1
+            "+2-555-123-4567",  # Wrong country code
+            "+1-55-123-4567",  # Wrong area code format
+            "+1-555-12-4567",  # Wrong format
+            "+1-555-123-456",  # Too short last part
+        ]
+        
+        all_passed = True
+        
+        # Test valid phone numbers
+        for phone in valid_phones:
+            test_data = {
+                "full_name": "Test User",
+                "email": f"test.{phone.replace('+', '').replace('-', '')}@example.com",
+                "phone_number": phone
+            }
+            
+            try:
+                response = self.session.post(
+                    f"{BACKEND_URL}/clients",
+                    json=test_data,
+                    headers={"Content-Type": "application/json"}
+                )
+                
+                if response.status_code in [200, 409]:  # 200 for new, 409 for duplicate
+                    self.log_test(f"Valid Phone ({phone})", True, "Accepted valid phone format")
+                else:
+                    self.log_test(f"Valid Phone ({phone})", False, f"Rejected valid phone: {response.status_code}", response.text)
+                    all_passed = False
+            except Exception as e:
+                self.log_test(f"Valid Phone ({phone})", False, f"Request error: {str(e)}")
+                all_passed = False
+        
+        # Test invalid phone numbers
+        for phone in invalid_phones:
+            test_data = {
+                "full_name": "Test User",
+                "email": f"test.{abs(hash(phone))}@example.com",
+                "phone_number": phone
+            }
+            
+            try:
+                response = self.session.post(
+                    f"{BACKEND_URL}/clients",
+                    json=test_data,
+                    headers={"Content-Type": "application/json"}
+                )
+                
+                if response.status_code == 400:
+                    error_data = response.json()
+                    if "+1-XXX-XXX-XXXX" in error_data.get("detail", ""):
+                        self.log_test(f"Invalid Phone ({phone})", True, "Correctly rejected invalid phone format")
+                    else:
+                        self.log_test(f"Invalid Phone ({phone})", False, "Wrong error message", error_data)
+                        all_passed = False
+                elif response.status_code == 422:  # Pydantic validation
+                    self.log_test(f"Invalid Phone ({phone})", True, "Correctly rejected invalid phone (422)")
+                else:
+                    self.log_test(f"Invalid Phone ({phone})", False, f"Expected 400/422, got {response.status_code}", response.text)
+                    all_passed = False
+            except Exception as e:
+                self.log_test(f"Invalid Phone ({phone})", False, f"Request error: {str(e)}")
+                all_passed = False
+        
+        return all_passed
+    
     def test_admin_login_success(self):
         """Test admin login with correct credentials"""
         login_data = {
