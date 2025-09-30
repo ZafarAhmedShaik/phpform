@@ -92,12 +92,12 @@ class BackendTester:
             return False, None
     
     def test_client_submission_duplicate_email(self):
-        """Test client form submission with duplicate email"""
+        """Test client form submission with duplicate email - should return 409"""
         # First submission
         test_data = {
             "full_name": "Jane Doe",
             "email": "duplicate.test@example.com",
-            "phone_number": "+1987654321"
+            "phone_number": "+1-987-654-3210"  # Proper format
         }
         
         try:
@@ -115,16 +115,16 @@ class BackendTester:
                 headers={"Content-Type": "application/json"}
             )
             
-            if response2.status_code == 400:
+            if response2.status_code == 409:  # Changed from 400 to 409 (Conflict)
                 error_data = response2.json()
-                if "already registered" in error_data.get("detail", "").lower():
-                    self.log_test("Client Submission (Duplicate Email)", True, "Correctly rejected duplicate email", error_data)
+                if "already been submitted" in error_data.get("detail", "").lower():
+                    self.log_test("Client Submission (Duplicate Email)", True, "Correctly rejected duplicate email with 409 status", error_data)
                     return True
                 else:
                     self.log_test("Client Submission (Duplicate Email)", False, "Wrong error message for duplicate", error_data)
                     return False
             else:
-                self.log_test("Client Submission (Duplicate Email)", False, f"Expected 400, got {response2.status_code}", response2.text)
+                self.log_test("Client Submission (Duplicate Email)", False, f"Expected 409, got {response2.status_code}", response2.text)
                 return False
         except Exception as e:
             self.log_test("Client Submission (Duplicate Email)", False, f"Request error: {str(e)}")
