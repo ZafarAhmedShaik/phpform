@@ -90,3 +90,5 @@ android-sdk/
 *.env.*
 ./backend/*.env
 ./backend/*.env.*
+.emergent
+
