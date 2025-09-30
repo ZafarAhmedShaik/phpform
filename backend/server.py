@@ -90,12 +90,28 @@ async def root():
 async def submit_client_data(client_data: ClientSubmissionCreate):
     """Submit new client data"""
     try:
+        # Validate email format more strictly
+        email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(email_regex, client_data.email):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Please enter a valid email address"
+            )
+        
+        # Validate phone number format (+1-XXX-XXX-XXXX)
+        phone_regex = r'^\+1-\d{3}-\d{3}-\d{4}$'
+        if not re.match(phone_regex, client_data.phone_number):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Phone number must be in format: +1-XXX-XXX-XXXX"
+            )
+        
         # Check if email already exists
         existing_client = await db.clients.find_one({"email": client_data.email})
         if existing_client:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email address already registered"
+                status_code=status.HTTP_409_CONFLICT,
+                detail="This email address has already been submitted"
             )
         
         # Create client submission
