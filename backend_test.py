@@ -65,7 +65,7 @@ class BackendTester:
         test_data = {
             "full_name": "John Smith",
             "email": f"john.smith.{datetime.now().timestamp()}@example.com",  # Unique email
-            "phone_number": "+1234567890"
+            "phone_number": "+1-555-123-4567"  # Proper format: +1-XXX-XXX-XXXX
         }
         
         try:
