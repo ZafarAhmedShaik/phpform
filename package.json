@@ -1,0 +1,13 @@
+{
+  "name": "client-form-app",
+  "version": "1.0.0",
+  "description": "Client form management system",
+  "scripts": {
+    "build": "cd frontend && yarn build",
+    "start": "cd frontend && yarn start"
+  },
+  "dependencies": {},
+  "engines": {
+    "node": "18.x"
+  }
+}
