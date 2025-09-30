@@ -34,9 +34,9 @@ api_router = APIRouter(prefix="/api")
 # Security
 security = HTTPBearer()
 
-# Admin credentials (in production, use proper auth system)
-ADMIN_USERNAME = "admin"
-ADMIN_PASSWORD = "admin123"  # In production, hash this!
+# Admin credentials from environment variables
+ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
 
 # Helper function to hash passwords
 def hash_password(password: str) -> str:
