@@ -54,7 +54,7 @@ class ClientSubmission(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     full_name: str = Field(..., min_length=2, max_length=100)
     email: EmailStr
-    phone_number: str = Field(..., min_length=10, max_length=20)
+    phone_number: str = Field(..., min_length=12, max_length=15, regex=r'^\+1-\d{3}-\d{3}-\d{4}$')
     submitted_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class ClientSubmissionCreate(BaseModel):
