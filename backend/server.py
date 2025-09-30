@@ -63,6 +63,14 @@ class ClientSubmissionCreate(BaseModel):
     email: EmailStr
     phone_number: str = Field(..., min_length=12, max_length=15, pattern=r'^\+1-\d{3}-\d{3}-\d{4}$')
 
+class ClientSubmissionResponse(BaseModel):
+    """Response model for client data - more flexible for existing data"""
+    id: str
+    full_name: str
+    email: str
+    phone_number: str
+    submitted_at: str
+
 class AdminLogin(BaseModel):
     username: str
     password: str
