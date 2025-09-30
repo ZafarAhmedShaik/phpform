@@ -99,32 +99,77 @@ const ClientForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
   const [errors, setErrors] = useState({});
+  const [showDuplicatePopup, setShowDuplicatePopup] = useState(false);
+
+  const formatPhoneNumber = (value) => {
+    // Remove all non-digit characters
+    const cleaned = value.replace(/\D/g, '');
+    
+    // Format as +1-XXX-XXX-XXXX
+    if (cleaned.length >= 10) {
+      const match = cleaned.match(/^1?(\d{3})(\d{3})(\d{4})$/);
+      if (match) {
+        return `+1-${match[1]}-${match[2]}-${match[3]}`;
+      }
+    }
+    
+    // Return partial formatting during typing
+    if (cleaned.length >= 6) {
+      const match = cleaned.match(/^1?(\d{3})(\d{3})(\d*)$/);
+      if (match) {
+        return `+1-${match[1]}-${match[2]}-${match[3]}`;
+      }
+    } else if (cleaned.length >= 3) {
+      const match = cleaned.match(/^1?(\d{3})(\d*)$/);
+      if (match) {
+        return `+1-${match[1]}-${match[2]}`;
+      }
+    } else if (cleaned.length > 0) {
+      return `+1-${cleaned}`;
+    }
+    
+    return value;
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    if (name === 'phone_number') {
+      const formatted = formatPhoneNumber(value);
+      setFormData(prev => ({ ...prev, [name]: formatted }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
     
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+    
+    // Clear messages when user modifies form
+    if (message) {
+      setMessage('');
     }
   };
 
   const validateForm = () => {
     const newErrors = {};
     
+    // Full name validation
     if (!formData.full_name.trim() || formData.full_name.length < 2) {
       newErrors.full_name = 'Full name must be at least 2 characters long';
     }
     
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // Enhanced email validation
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = 'Please enter a valid email address (e.g., user@domain.com)';
     }
     
-    const phoneRegex = /^[+]?[0-9\s\-\(\)]{10,20}$/;
+    // Phone number validation (must be +1-XXX-XXX-XXXX format)
+    const phoneRegex = /^\+1-\d{3}-\d{3}-\d{4}$/;
     if (!phoneRegex.test(formData.phone_number)) {
-      newErrors.phone_number = 'Please enter a valid phone number (10-20 digits)';
+      newErrors.phone_number = 'Phone number must be in format: +1-XXX-XXX-XXXX (10 digits)';
     }
     
     setErrors(newErrors);
@@ -146,7 +191,10 @@ const ClientForm = () => {
       setMessage('Thank you! Your information has been submitted successfully.');
       setFormData({ full_name: '', email: '', phone_number: '' });
     } catch (error) {
-      if (error.response?.data?.detail) {
+      if (error.response?.status === 409) {
+        // Duplicate submission - show popup
+        setShowDuplicatePopup(true);
+      } else if (error.response?.data?.detail) {
         setMessage(`Error: ${error.response.data.detail}`);
       } else {
         setMessage('An error occurred. Please try again.');
@@ -156,8 +204,39 @@ const ClientForm = () => {
     }
   };
 
+  const closeDuplicatePopup = () => {
+    setShowDuplicatePopup(false);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4">
+      {/* Duplicate Submission Popup */}
+      {showDuplicatePopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-8 max-w-md mx-4">
+            <div className="text-center">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4">
+                <svg className="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Details Already Submitted
+              </h3>
+              <p className="text-sm text-gray-500 mb-6">
+                This email address has already been submitted. Each email can only be registered once.
+              </p>
+              <button
+                onClick={closeDuplicatePopup}
+                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors font-medium"
+              >
+                Understood
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-md mx-auto bg-white rounded-lg shadow-xl p-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Client Information</h1>
@@ -208,7 +287,7 @@ const ClientForm = () => {
               className={`w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
                 errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
               }`}
-              placeholder="Enter your email address"
+              placeholder="Enter your email address (e.g., john@example.com)"
               required
             />
             {errors.email && (
@@ -218,7 +297,7 @@ const ClientForm = () => {
           
           <div>
             <label htmlFor="phone_number" className="block text-sm font-medium text-gray-700 mb-2">
-              Phone Number *
+              Phone Number * <span className="text-gray-500 text-xs">(US format)</span>
             </label>
             <input
               type="tel"
@@ -229,12 +308,14 @@ const ClientForm = () => {
               className={`w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
                 errors.phone_number ? 'border-red-300 bg-red-50' : 'border-gray-300'
               }`}
-              placeholder="Enter your phone number"
+              placeholder="+1-XXX-XXX-XXXX"
+              maxLength="14"
               required
             />
             {errors.phone_number && (
               <p className="mt-1 text-sm text-red-600">{errors.phone_number}</p>
             )}
+            <p className="mt-1 text-xs text-gray-500">Format: +1-555-123-4567</p>
           </div>
           
           <button
