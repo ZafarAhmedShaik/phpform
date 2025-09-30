@@ -135,18 +135,38 @@ class BackendTester:
         test_cases = [
             {
                 "name": "Short name",
-                "data": {"full_name": "A", "email": "test@example.com", "phone_number": "+1234567890"},
+                "data": {"full_name": "A", "email": "test@example.com", "phone_number": "+1-555-123-4567"},
                 "expected_error": "min_length"
             },
             {
-                "name": "Invalid email",
-                "data": {"full_name": "John Doe", "email": "invalid-email", "phone_number": "+1234567890"},
+                "name": "Invalid email - no @",
+                "data": {"full_name": "John Doe", "email": "invalid-email", "phone_number": "+1-555-123-4567"},
                 "expected_error": "email"
             },
             {
-                "name": "Short phone",
-                "data": {"full_name": "John Doe", "email": "test@example.com", "phone_number": "123"},
-                "expected_error": "min_length"
+                "name": "Invalid email - no TLD",
+                "data": {"full_name": "John Doe", "email": "test@domain", "phone_number": "+1-555-123-4567"},
+                "expected_error": "email"
+            },
+            {
+                "name": "Invalid email - random chars",
+                "data": {"full_name": "John Doe", "email": "!@#$%^&*()", "phone_number": "+1-555-123-4567"},
+                "expected_error": "email"
+            },
+            {
+                "name": "Invalid phone - wrong format",
+                "data": {"full_name": "John Doe", "email": "test@example.com", "phone_number": "+1234567890"},
+                "expected_error": "phone_format"
+            },
+            {
+                "name": "Invalid phone - missing +1",
+                "data": {"full_name": "John Doe", "email": "test@example.com", "phone_number": "555-123-4567"},
+                "expected_error": "phone_format"
+            },
+            {
+                "name": "Invalid phone - too short",
+                "data": {"full_name": "John Doe", "email": "test@example.com", "phone_number": "+1-555-123"},
+                "expected_error": "phone_format"
             }
         ]
         
@@ -159,10 +179,14 @@ class BackendTester:
                     headers={"Content-Type": "application/json"}
                 )
                 
-                if response.status_code == 422:  # Validation error
-                    self.log_test(f"Validation ({test_case['name']})", True, "Correctly rejected invalid data", response.json())
+                if response.status_code == 400:  # Validation error should return 400
+                    error_data = response.json()
+                    self.log_test(f"Validation ({test_case['name']})", True, "Correctly rejected invalid data", error_data)
+                elif response.status_code == 422:  # Pydantic validation error
+                    error_data = response.json()
+                    self.log_test(f"Validation ({test_case['name']})", True, "Correctly rejected invalid data (422)", error_data)
                 else:
-                    self.log_test(f"Validation ({test_case['name']})", False, f"Expected 422, got {response.status_code}", response.text)
+                    self.log_test(f"Validation ({test_case['name']})", False, f"Expected 400/422, got {response.status_code}", response.text)
                     all_passed = False
             except Exception as e:
                 self.log_test(f"Validation ({test_case['name']})", False, f"Request error: {str(e)}")
