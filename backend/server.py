@@ -158,12 +158,22 @@ async def admin_login(login_data: AdminLogin):
     )
 
 # Admin routes (protected)
-@api_router.get("/admin/clients", response_model=List[ClientSubmission])
+@api_router.get("/admin/clients", response_model=List[ClientSubmissionResponse])
 async def get_all_clients(token: str = Depends(verify_admin_token)):
     """Get all client submissions (admin only)"""
     try:
         clients = await db.clients.find().sort("submitted_at", -1).to_list(1000)
-        return [ClientSubmission(**client) for client in clients]
+        # Convert to response format without strict validation
+        response_clients = []
+        for client in clients:
+            response_clients.append(ClientSubmissionResponse(
+                id=client.get('id', ''),
+                full_name=client.get('full_name', ''),
+                email=client.get('email', ''),
+                phone_number=client.get('phone_number', ''),
+                submitted_at=client.get('submitted_at', '')
+            ))
+        return response_clients
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
