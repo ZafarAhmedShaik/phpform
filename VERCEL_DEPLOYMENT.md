@@ -47,6 +47,7 @@ vercel --prod
 # Option 2: Connect GitHub repo in Vercel dashboard
 # - Import your GitHub repository
 # - Vercel will auto-detect the configuration
+# - Uses Node.js 22.x LTS (latest)
 ```
 
 ### 4. Update Frontend URL
