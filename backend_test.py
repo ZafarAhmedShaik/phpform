@@ -559,6 +559,8 @@ class BackendTester:
         tests = [
             ("Root Endpoint", self.test_root_endpoint),
             ("Client Submission (Valid)", self.test_client_submission_valid),
+            ("Enhanced Email Validation", self.test_enhanced_email_validation),
+            ("Enhanced Phone Validation", self.test_enhanced_phone_validation),
             ("Client Submission (Duplicate Email)", self.test_client_submission_duplicate_email),
             ("Client Validation Errors", self.test_client_submission_validation_errors),
             ("Admin Login (Success)", self.test_admin_login_success),
