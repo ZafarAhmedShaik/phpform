@@ -24,10 +24,10 @@
     }
   ],
   "env": {
-    "MONGO_URL": "mongodb+srv://skhzafar110:ZFRas@1874@formcluster.kn95p7y.mongodb.net/?retryWrites=true&w=majority&appName=FormCluster",
-    "DB_NAME": "client_data", 
-    "ADMIN_USERNAME": "skhzafar110",
-    "ADMIN_PASSWORD": "ZFRas@1874",
-    "CORS_ORIGINS": "@cors_origins"
+    "MONGO_URL": process.env.MONGO_URL
+    "DB_NAME": process.env.DB_NAME, 
+    "ADMIN_USERNAME": process.env.ADMIN_USERNAME,
+    "ADMIN_PASSWORD": process.env.ADMIN_PASSWORD,
+    "CORS_ORIGINS": process.env.REACT
   }
 }
