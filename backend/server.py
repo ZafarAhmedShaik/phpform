@@ -35,8 +35,8 @@ api_router = APIRouter(prefix="/api")
 security = HTTPBearer()
 
 # Admin credentials from environment variables
-ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
-ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
+ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME')
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD')
 
 # Helper function to hash passwords
 def hash_password(password: str) -> str:
@@ -245,7 +245,7 @@ app.include_router(api_router)
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_origins=os.environ.get('CORS_ORIGINS').split(','),
     allow_methods=["*"],
     allow_headers=["*"],
 )
