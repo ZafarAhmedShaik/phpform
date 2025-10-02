@@ -24,7 +24,7 @@
     }
   ],
   "env": {
-    "MONGO_URL": "process.env.MONGO_URL"
+    "MONGO_URL": "process.env.MONGO_URL",
     "DB_NAME": "process.env.DB_NAME", 
     "ADMIN_USERNAME": "process.env.ADMIN_USERNAME",
     "ADMIN_PASSWORD": "process.env.ADMIN_PASSWORD",
